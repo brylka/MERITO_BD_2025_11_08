@@ -39,37 +39,47 @@ class WeatherDataConsumer:
             return None
 
     def start_consuming(self):
-        while True:
-            msg = self.consumer.poll(1.0)
+        with open('weather_data.csv', 'a') as f:
+            f.seek(0,2)
+            if f.tell() == 0:
+                f.write("timestamp,station_id,temperature,humidity\n")
+                print("Utworzono nowy plik csv")
 
-            if msg is None:
-                continue
-            if msg.error():
-                if msg.error().code() == KafkaError._PARTITION_EOF:
+            while True:
+                msg = self.consumer.poll(1.0)
+
+                if msg is None:
                     continue
-                else:
-                    print(f"Błąd Kafka: {msg.error()}")
-                    break
-            try:
-                data = json.loads(msg.value().decode("utf-8"))
-                station_id = data["station_id"]
-                print(f"Otrzymano zadanie dla stacji: {station_id}")
+                if msg.error():
+                    if msg.error().code() == KafkaError._PARTITION_EOF:
+                        continue
+                    else:
+                        print(f"Błąd Kafka: {msg.error()}")
+                        break
+                try:
+                    data = json.loads(msg.value().decode("utf-8"))
+                    station_id = data["station_id"]
+                    print(f"Otrzymano zadanie dla stacji: {station_id}")
 
-                weather_data = self.fetch_weather_data(station_id)
+                    weather_data = self.fetch_weather_data(station_id)
 
-                if weather_data:
-                    temperature = weather_data["temperature"]
-                    humidity = weather_data["humidity"]
-                    timestamp = weather_data["timestamp"]
+                    if weather_data:
+                        temperature = weather_data["temperature"]
+                        humidity = weather_data["humidity"]
+                        timestamp = weather_data["timestamp"]
 
-                    print(f"Stacja: {station_id}")
-                    print(f"Temperatura: {temperature:.2f}")
-                    print(f"Wilgotność: {humidity:.2f}")
-                    print(f"Timestamp: {timestamp}")
-                else:
-                    print(f"Nie udało sie pobrać danych dla stacji: {station_id}")
-            except Exception as e:
-                print(f"Błąd przetwarzania wiadomości: {e}")
+                        print(f"Stacja: {station_id}")
+                        print(f"Temperatura: {temperature:.2f}")
+                        print(f"Wilgotność: {humidity:.2f}")
+                        print(f"Timestamp: {timestamp}")
+
+                        f.write(f"{timestamp},{station_id},{temperature:.2f},{humidity:.2f}\n")
+                        f.flush()
+                        print("Zapisano do pliku csv")
+                    else:
+                        print(f"Nie udało sie pobrać danych dla stacji: {station_id}")
+                except Exception as e:
+                    print(f"Błąd przetwarzania wiadomości: {e}")
 
 
 
