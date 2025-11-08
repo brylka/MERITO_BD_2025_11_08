@@ -30,7 +30,7 @@ class WeatherDataConsumer:
                 if temp > 30:
                     print(f"WYSOKA TEMPERATURA: {temp:.2f} na stacji {station_id}")
 
-                return temp
+                return data
             else:
                 print(f"Błąd HTTP: {response.status_code}")
                 return None
