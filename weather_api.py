@@ -1,3 +1,4 @@
+import time
 from datetime import datetime
 from fastapi import FastAPI
 import uvicorn
@@ -7,6 +8,7 @@ app = FastAPI()
 
 @app.get("/weather/{station_id}")
 def get_weather_simple(station_id: str):
+    time.sleep(random.randint(2,8))
     return {
         "station_id": station_id,
         "temperature": random.uniform(-15,45),
